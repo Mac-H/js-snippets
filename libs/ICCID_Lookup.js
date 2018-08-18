@@ -835,7 +835,7 @@ function  ICCID_Lookup(value_txt,bad_checksum_is_warning_only=true)
 	
 	var warning = null;
 	if (value_txt.length !=20) return {valid:false, cleaned_iccid:value_txt, reason:"An ICCID number has 20 digits"};
-	if (!valid_luhn_checkdigits(value_txt))
+	if (!validate_luhn_checkdigits(value_txt))
 	{
 		warning = "The check digits are not valid for an ICCID code";
 		if (!bad_checksum_is_warning_only)
@@ -866,10 +866,13 @@ function  ICCID_Lookup(value_txt,bad_checksum_is_warning_only=true)
 }
 
 // takes the form field value and returns true on valid number
-function valid_luhn_checkdigits(value) {
+function validate_luhn_checkdigits(value, num_digits=-1)
+{
  	if (/[^0-9\s]+/.test(value)) return false;
 	value = value.replace(/\D/g, "");
 
+	if ((num_digits > 0) && (value.length != num_digits)) return false;
+	
 	//console.log("Verify check digits on `"+value+"`");
 	
 	// The Luhn Algorithm. It's so pretty.
