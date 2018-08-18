@@ -2,10 +2,15 @@
 
 // Verifies an ICCID (Mobile phone card ID).
 //
-// Use: function  ICCID_Validate(value_txt)
+// Use: function  ICCID_Lookup(value_txt)
+//      function  ICCID_Lookup(value_txt,true ) // bad_checksum_is_warning_only:true = default
+//      function  ICCID_Lookup(value_txt,false) // bad_checksum_is_warning_only:false
 //
 // Returns: {valid:false,cleaned_iccid:"1334234",reason:"The number must be 20 digits long" (or whatever)
-//  -or-    {valid:true,cleaned_iccid:"892600312312313123",Location:"Zambia",Company:"Zambia Telecommunications Company Ltd (ZAMTEL)",IIN_WithSpaces:"89 260 03",IIN:"8926003"
+//  -or-    {valid:true,cleaned_iccid:"892600312312313123",Location:"Zambia",Company:"Zambia Telecommunications Company Ltd (ZAMTEL)",IIN_WithSpaces:"89 260 03",IIN:"8926003"}
+//  -or-    {valid:true,"warning":"The check digits are not valid for an ICCID code","Company":....})
+
+		
 //
 //
 // Use ICCID_UnitTestsAll() to verify
@@ -778,7 +783,7 @@ function ICCID_UnitTests_All()
 
 function ICCID_UnitTest_(value_txt,test_note, expected_result=null,bad_checksum_is_warning_only=true)
 {
-    var obj = ICCID_Validate(value_txt,bad_checksum_is_warning_only);
+    var obj = ICCID_Lookup(value_txt,bad_checksum_is_warning_only);
 	
 	if (expected_result == null)
 	{
@@ -787,7 +792,7 @@ function ICCID_UnitTest_(value_txt,test_note, expected_result=null,bad_checksum_
 		
 		console.log(prefix +JSON.stringify(obj)+","+JSON.stringify(bad_checksum_is_warning_only)+suffix);
 		if (obj.hasOwnProperty('warning') && obj.valid)
-			console.log(prefix +JSON.stringify(ICCID_Validate(value_txt,false))+",false"+suffix);
+			console.log(prefix +JSON.stringify(ICCID_Lookup(value_txt,false))+",false"+suffix);
 		return 1;
 	}
 	else
@@ -821,7 +826,7 @@ function ICCID_UnitTest_(value_txt,test_note, expected_result=null,bad_checksum_
 
 	
 // This is a 20 digit code with two luhn check digits
-function  ICCID_Validate(value_txt,bad_checksum_is_warning_only=true)
+function  ICCID_Lookup(value_txt,bad_checksum_is_warning_only=true)
 {
 	if (value_txt == null) value_txt ="";
 	
