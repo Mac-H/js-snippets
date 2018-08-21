@@ -740,8 +740,14 @@ function ICCID_UnitTests_All()
 
 	if (false) // Create test cases
 	{
+		fail_count+= ICCID_UnitTest_("89610101916128000030","Good(20 digit)");
+		fail_count+= ICCID_UnitTest_("8961010191612800003","Good(19 digit)");
+		
 		fail_count+= ICCID_UnitTest_("89610101919346000085","Good");
-		fail_count+= ICCID_UnitTest_("89610101916096000029","Bad");
+		fail_count+= ICCID_UnitTest_("89610101916096000029","Good2");
+		fail_count+= ICCID_UnitTest_("89610101916096000021","20th digit ignored");
+		fail_count+= ICCID_UnitTest_("89610201916096000021","Bad Checksum");
+		
 		fail_count+= ICCID_UnitTest_("896101019193460000851","Extra Digit");
 		fail_count+= ICCID_UnitTest_("8961010191934600x085","Bad Char");
 		fail_count+= ICCID_UnitTest_("896101019193460-00085","Hyphen");
@@ -750,34 +756,38 @@ function ICCID_UnitTests_All()
 		fail_count+= ICCID_UnitTest_("896101019193460 00085","Space");
 		fail_count+= ICCID_UnitTest_("896101019193460\t00085","Tab");
 		fail_count+= ICCID_UnitTest_("896101019193460 00085","Nonbreaking Space");  // Nonbreaking space
-		fail_count+= ICCID_UnitTest_("896101019163960‑00085","Non breaking Hyphen");  // Nonbreaking hyphen
-		fail_count+= ICCID_UnitTest_("89 610 10 19160960 00085","Multiple Spaces");
+		fail_count+= ICCID_UnitTest_("896101019193460‑00085","Non breaking Hyphen");  // Nonbreaking hyphen
+		fail_count+= ICCID_UnitTest_("89 610 10 19193460 00085","Multiple Spaces");
 		fail_count+= ICCID_UnitTest_(null,"Null");
 		fail_count+= ICCID_UnitTest_(89610101919346000085,"Attempt at Good Number - But javascript will round ");
 		fail_count+= ICCID_UnitTest_(134,"Bad Number");
 	}
 	else
 	{
-		fail_count+= ICCID_UnitTest_("89610101919346000085","Good",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"89610101919346000085"},true); // Good
-		fail_count+= ICCID_UnitTest_("89610101916096000029","Bad",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"89610101916096000029","warning":"The check digits are not valid for an ICCID code"},true); // Bad
-		fail_count+= ICCID_UnitTest_("89610101916096000029","Bad",{"valid":false,"cleaned_iccid":"89610101916096000029","reason":"The check digits are not valid for an ICCID code"},false); // Bad
-		fail_count+= ICCID_UnitTest_("896101019193460000851","Extra Digit",{"valid":false,"cleaned_iccid":"896101019193460000851","reason":"An ICCID number has 20 digits"},true); // Extra Digit
-		fail_count+= ICCID_UnitTest_("8961010191934600x085","Bad Char",{"valid":false,"cleaned_iccid":"8961010191934600085","reason":"An ICCID number has 20 digits"},true); // Bad Char
-		fail_count+= ICCID_UnitTest_("896101019193460-00085","Hyphen",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"89610101919346000085"},true); // Hyphen
-		fail_count+= ICCID_UnitTest_("896101019193460:00085","Colon",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"89610101919346000085"},true); // Colon
-		fail_count+= ICCID_UnitTest_("896101019193460â€”00085","Emdash",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"89610101919346000085"},true); // Emdash
-		fail_count+= ICCID_UnitTest_("896101019193460 00085","Space",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"89610101919346000085"},true); // Space
-		fail_count+= ICCID_UnitTest_("896101019193460\t00085","Tab",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"89610101919346000085"},true); // Tab
-		fail_count+= ICCID_UnitTest_("896101019193460 00085","Nonbreaking Space",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"89610101919346000085"},true); // Nonbreaking Space
-		fail_count+= ICCID_UnitTest_("896101019163960â€‘00085","Non breaking Hyphen",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"89610101916396000085","warning":"The check digits are not valid for an ICCID code"},true); // Non breaking Hyphen
-		fail_count+= ICCID_UnitTest_("896101019163960â€‘00085","Non breaking Hyphen",{"valid":false,"cleaned_iccid":"89610101916396000085","reason":"The check digits are not valid for an ICCID code"},false); // Non breaking Hyphen
-		fail_count+= ICCID_UnitTest_("89 610 10 19160960 00085","Multiple Spaces",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"89610101916096000085","warning":"The check digits are not valid for an ICCID code"},true); // Multiple Spaces
-		fail_count+= ICCID_UnitTest_("89 610 10 19160960 00085","Multiple Spaces",{"valid":false,"cleaned_iccid":"89610101916096000085","reason":"The check digits are not valid for an ICCID code"},false); // Multiple Spaces
-		fail_count+= ICCID_UnitTest_(null,"Null",{"valid":false,"cleaned_iccid":"","reason":"An ICCID number has 20 digits"},true); // Null
-		fail_count+= ICCID_UnitTest_(89610101919346000000,"Attempt at Good Number - But javascript will round ",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"89610101919346000000","warning":"The check digits are not valid for an ICCID code"},true); // Attempt at Good Number - But javascript will round 
-		fail_count+= ICCID_UnitTest_(89610101919346000000,"Attempt at Good Number - But javascript will round ",{"valid":false,"cleaned_iccid":"89610101919346000000","reason":"The check digits are not valid for an ICCID code"},false); // Attempt at Good Number - But javascript will round 
-		fail_count+= ICCID_UnitTest_(134,"Bad Number",{"valid":false,"cleaned_iccid":"134","reason":"An ICCID number has 20 digits"},true); // Bad Number	}
-}
+		
+		fail_count+= ICCID_UnitTest_("89610101916128000030","Good(20 digit)",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"89610101916128000030","trimmed_to_19_digits":"8961010191612800003"},true); // Good(20 digit)
+		fail_count+= ICCID_UnitTest_("8961010191612800003","Good(19 digit)",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"8961010191612800003","trimmed_to_19_digits":"8961010191612800003"},true); // Good(19 digit)
+		fail_count+= ICCID_UnitTest_("89610101919346000085","Good",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"89610101919346000085","trimmed_to_19_digits":"8961010191934600008"},true); // Good
+		fail_count+= ICCID_UnitTest_("89610101916096000029","Good2",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"89610101916096000029","trimmed_to_19_digits":"8961010191609600002"},true); // Good2
+		fail_count+= ICCID_UnitTest_("89610101916096000021","20th digit ignored",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"89610101916096000021","trimmed_to_19_digits":"8961010191609600002"},true); // 20th digit ignored
+		fail_count+= ICCID_UnitTest_("89610201916096000021","Bad Checksum",{"Location":"Australia","Company":"Singtel Optus Ltd.","IIN_WithSpaces":"89 61 02","IIN":"896102","valid":true,"cleaned_iccid":"89610201916096000021","warning":"The check digits are not valid for an ICCID code","trimmed_to_19_digits":"8961020191609600002"},true); // Bad Checksum
+		fail_count+= ICCID_UnitTest_("89610201916096000021","Bad Checksum",{"valid":false,"cleaned_iccid":"89610201916096000021","reason":"The check digits are not valid for an ICCID code","trimmed_to_19_digits":"8961020191609600002"},false); // Bad Checksum
+		fail_count+= ICCID_UnitTest_("896101019193460000851","Extra Digit",{"valid":false,"cleaned_iccid":"896101019193460000851","reason":"An ICCID number has 19 or 20 digits"},true); // Extra Digit
+		fail_count+= ICCID_UnitTest_("8961010191934600x085","Bad Char",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"8961010191934600085","warning":"The check digits are not valid for an ICCID code","trimmed_to_19_digits":"8961010191934600085"},true); // Bad Char
+		fail_count+= ICCID_UnitTest_("8961010191934600x085","Bad Char",{"valid":false,"cleaned_iccid":"8961010191934600085","reason":"The check digits are not valid for an ICCID code","trimmed_to_19_digits":"8961010191934600085"},false); // Bad Char
+		fail_count+= ICCID_UnitTest_("896101019193460-00085","Hyphen",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"89610101919346000085","trimmed_to_19_digits":"8961010191934600008"},true); // Hyphen
+		fail_count+= ICCID_UnitTest_("896101019193460:00085","Colon",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"89610101919346000085","trimmed_to_19_digits":"8961010191934600008"},true); // Colon
+		fail_count+= ICCID_UnitTest_("896101019193460â€”00085","Emdash",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"89610101919346000085","trimmed_to_19_digits":"8961010191934600008"},true); // Emdash
+		fail_count+= ICCID_UnitTest_("896101019193460 00085","Space",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"89610101919346000085","trimmed_to_19_digits":"8961010191934600008"},true); // Space
+		fail_count+= ICCID_UnitTest_("896101019193460\t00085","Tab",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"89610101919346000085","trimmed_to_19_digits":"8961010191934600008"},true); // Tab
+		fail_count+= ICCID_UnitTest_("896101019193460 00085","Nonbreaking Space",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"89610101919346000085","trimmed_to_19_digits":"8961010191934600008"},true); // Nonbreaking Space
+		fail_count+= ICCID_UnitTest_("896101019193460â€‘00085","Non breaking Hyphen",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"89610101919346000085","trimmed_to_19_digits":"8961010191934600008"},true); // Non breaking Hyphen
+		fail_count+= ICCID_UnitTest_("89 610 10 19193460 00085","Multiple Spaces",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"89610101919346000085","trimmed_to_19_digits":"8961010191934600008"},true); // Multiple Spaces
+		fail_count+= ICCID_UnitTest_(null,"Null",{"valid":false,"cleaned_iccid":"","reason":"An ICCID number has 19 or 20 digits"},true); // Null
+		fail_count+= ICCID_UnitTest_(89610101919346000000,"Attempt at Good Number - But javascript will round ",{"Location":"Australia","Company":"Telstra Corporation Ltd.","IIN_WithSpaces":"89 61 01","IIN":"896101","valid":true,"cleaned_iccid":"89610101919346000000","warning":"The check digits are not valid for an ICCID code","trimmed_to_19_digits":"8961010191934600000"},true); // Attempt at Good Number - But javascript will round 
+		fail_count+= ICCID_UnitTest_(89610101919346000000,"Attempt at Good Number - But javascript will round ",{"valid":false,"cleaned_iccid":"89610101919346000000","reason":"The check digits are not valid for an ICCID code","trimmed_to_19_digits":"8961010191934600000"},false); // Attempt at Good Number - But javascript will round 
+		fail_count+= ICCID_UnitTest_(134,"Bad Number",{"valid":false,"cleaned_iccid":"134","reason":"An ICCID number has 19 or 20 digits"},true); // Bad Number
+	}
 	console.log("Failed "+fail_count+" tests");
 }
 
@@ -834,12 +844,21 @@ function  ICCID_Lookup(value_txt,bad_checksum_is_warning_only=true)
 	value_txt = value_txt.replace(/\D/g, "");
 	
 	var warning = null;
-	if (value_txt.length !=20) return {valid:false, cleaned_iccid:value_txt, reason:"An ICCID number has 20 digits"};
-	if (!validate_luhn_checkdigits(value_txt))
+	let value_to_checksum = value_txt;
+	if (value_txt.length ==20)
+	{
+		value_to_checksum = value_txt.substring(0,19); // The 20th digit isn't part of the ICCID.
+	}
+	else if (value_txt.length !=19) 
+	{
+		return {valid:false, cleaned_iccid:value_txt, reason:"An ICCID number has 19 or 20 digits"};
+	}
+	
+	if (!validate_luhn_checkdigits(value_to_checksum))
 	{
 		warning = "The check digits are not valid for an ICCID code";
 		if (!bad_checksum_is_warning_only)
-				return {valid:false, cleaned_iccid:value_txt, reason:warning};
+			return {valid:false, cleaned_iccid:value_txt, reason:warning,trimmed_to_19_digits:value_to_checksum};
 	}	
 	for (var key in IIN_Lookup)
 	{
@@ -851,18 +870,20 @@ function  ICCID_Lookup(value_txt,bad_checksum_is_warning_only=true)
 			return_obj.cleaned_iccid=value_txt;
 			if (warning != null)
 				return_obj.warning = warning;
+			
+			return_obj.trimmed_to_19_digits=value_to_checksum
 			return return_obj;
 		}
 	}
 	
 	if (warning != null)
-		return {valid:false, reason:warning};
+		return {valid:false, reason:warning,trimmed_to_19_digits:value_to_checksum};
 	
 	if (!value_txt.startsWith("89"))
-		return {valid:false,cleaned_iccid:value_txt,reason:"The check digits pass and it is the right length, but doesn't match any known assigner"};
+		return {valid:false,cleaned_iccid:value_txt,reason:"The check digits pass and it is the right length, but doesn't match any known assigner",trimmed_to_19_digits:value_to_checksum};
 		
 	// Unknown - but everything matches.  We don't want to fail just because a new company comes along
-	return {valid:true, cleaned_iccid:value_txt,Location:"Unknown","Company":"Unknown","IIN_WithSpaces":"89","IIN":"89"};
+	return {valid:true, cleaned_iccid:value_txt,Location:"Unknown","Company":"Unknown","IIN_WithSpaces":"89","IIN":"89",trimmed_to_19_digits:value_to_checksum};
 }
 
 // takes the form field value and returns true on valid number
