@@ -1,0 +1,325 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"    "http://www.w3.org/TR/html4/strict.dtd"><html lang="en">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Testing - Table Helper Library</title>
+<style>
+#data_summary_table {
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+#data_summary_table td, #data_summary_table th {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+#data_summary_table tr:nth-child(even){background-color: #f2f2f2;}
+
+#data_summary_table tr:hover {background-color: #ddd;}
+
+.row_merged_line_first {
+   border-top: 2px solid black;
+ }
+.row_merged_line_last {
+   border-top: 2px solid black;
+ }
+
+#data_summary_table th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: #4CAF50;
+    color: white;
+}
+</style>  </head>
+<body>
+
+<h1>Testing Table Helper Library</h1>
+<hr>
+<div id='test_results'><div>
+<script src='../libs/he.js'></script>
+<script src='../libs/TableHelper.js'></script>
+
+<script>
+
+ function asHtml(txt)
+ {
+   return txt;
+  }
+  
+  var test_results=[];
+  
+  
+ function AddResult(test_result)
+ {
+    test_results.push(test_result);
+
+    let html = '';
+
+	
+	html += "<table>\n";
+	
+	for (const test_entry of test_results)
+	{
+		html += "<tr><td>----------</td><td>----------------</td><tr>\n";
+		html += "<tr><td>"+test_entry.lhs_html+"</td><td>"+test_entry.rhs_html+"</td></tr>\n";
+	}
+	html += "</table>\n";
+	
+	
+	document.getElementById("test_results").innerHTML = html;
+ }	
+
+ 
+ function AddTestResult(test_note_html,test_result_html)
+ {
+	AddResult({lhs_html:test_note_html,rhs_html:test_result_html});
+  }
+ 
+ 
+  
+ function DoTest(data,options=null)
+ {
+	var html_lhs;
+	var options_msg = "";
+	
+	if (options != null)
+	{
+	options_msg = "&bull; options = "+asHtml(JSON.stringify(options))+"<br>";
+	
+	html_lhs = "TableHelper(data,options):<br>\n&bull; data=<br>\n";
+    }
+	else
+	{
+	html_lhs = "TableHelper(data):<br>\n";
+   }
+	html_lhs += '<pre>'+asHtml(JSON.stringify(data,null,4).split("\n").join("<br>"))+'</pre>';
+
+	html_rhs = options_msg+TableHelper_MakeTable(data,options);
+	
+
+    AddTestResult(html_lhs,html_rhs);
+ 
+ }
+ 
+ 
+ //
+ // Tests
+ //
+ 
+  var private_test_a = 
+  
+  [
+        {
+            "Group": "Montego",
+            "reason": "Observed (With Firmware V1.24)",
+            "_multiple": [
+                {
+                    "generator": "0.01b",
+                    "when": "2018-09-05 07:41 GMT",
+                    "url": {
+                        "html": "<a target='_blank' href='https:\/\/example.com/?uid=reading_1499'>Link<\/a>"
+                    }
+                },
+                {
+                    "generator": "0.01b",
+                    "when": "2018-08-14 04:40 GMT",
+                    "url": {
+                        "html": "<a target='_blank' href='https:\/\/example.com/?uid=reading_14144'>Link<\/a>"
+                    }
+                }
+            ]
+        },
+        {
+            "Group": "Indigo",
+            "reason": "Observed (With Firmware V1.23)",
+            "_multiple": [
+                {
+                    "generator": "0.01b",
+                    "when": "2018-08-14 04:56 GMT",
+                    "url": {
+                        "html": "<a target='_blank' href='https:\/\/example.com/?uid=reading_141asdf'>Link<\/a>"
+                    }
+                },
+                {
+                    "generator": "0.01b",
+                    "when": "2018-06-25 04:17 GMT",
+                    "url": {
+                        "html": "<a target='_blank' href='https:\/\/example.com/?uid=reading_111344'>Link<\/a>"
+                    }
+                }
+            ]
+        },
+        {
+            "Group": "Montego",
+            "reason": "Observed (With Firmware V1.22)",
+            "_multiple": [
+                {
+                    "generator": "0.01b",
+                    "when": "2018-08-14 04:30 GMT",
+                    "url": {
+                        "html": "<a target='_blank' href='https:\/\/example.com/?uid=reading_11'>Link<\/a>"
+                    }
+                },
+                {
+                    "generator": "0.01b",
+                    "when": "2018-08-14 04:30 GMT",
+                    "url": {
+                        "html": "<a target='_blank' href='https:\/\/example.com/?uid=reading_19'>Link<\/a>"
+                    }
+                },
+                {
+                    "generator": "0.01b",
+                    "when": "2018-08-14 00:43 GMT",
+                    "url": {
+                        "html": "<a target='_blank' href='https:\/\/example.com/?uid=reading_12'>Link<\/a>"
+                    }
+                }
+            ]
+        },
+        {
+            "Group": "Indigo",
+            "reason": "Observed (With Firmware V1.21)",
+            "_multiple": [
+                {
+                    "generator": "0.01b",
+                    "when": "2018-08-13 19:41 GMT",
+                    "url": {
+                        "html": "<a target='_blank' href='https:\/\/example.com/?uid=reading_11'>Link<\/a>"
+                    }
+                },
+                {
+                    "generator": "0.01b",
+                    "when": "2018-07-20 04:30 GMT",
+                    "url": {
+                        "html": "<a target='_blank' href='https:\/\/example.com/?uid=reading_12'>Link<\/a>"
+                    }
+                }
+            ]
+        },
+        {
+            "Group": "Indigo",
+            "reason": "Observed (With Firmware 0x0102'0d01)",
+            "_multiple": [
+                {
+                    "generator": "0.01b",
+                    "when": "2018-08-13 07:46 GMT",
+                    "url": {
+                        "html": "<a target='_blank' href='https:\/\/example.com/?uid=reading_13'>Link<\/a>"
+                    }
+                },
+                {
+                    "generator": "0.01b",
+                    "when": "2018-08-08 04:31 GMT",
+                    "url": "html:<a href='https:\/\/example.com/?uid=reading_14'>Link<\/a>"
+				}
+            ]
+        }
+	];
+	
+	  DoTest(private_test_a,
+			{table_attributes:"id='data_summary_table'",
+			ignorePropertyPrefixList:['generator'],
+			title_lookup:{network:'Network',reason:'Notes',when:'When',url:'Ref'},merge_up:['_multiple']});
+
+	  
+ 
+   DoTest([{name:"Device ID",value:"A001"},{name:"Device Colour",value:"Red"}]);
+   DoTest([{device:"A001",message :"\u2714 9 tests passed"},{device:"A002",message :"\u2714 12 tests passed"}]);
+   DoTest([{device:"A001",message :"\u2714 9 tests passed"},{device:"A002",message :"\u2714 12 tests passed"}],{title_lookup:{device:'Device ID',message:'Test Results'}});
+   DoTest([{device:"A001",message :"\u2714 9 tests passed"},{device:"A002",message :"\u2714 12 tests passed"}],{table_attributes:"id='data_summary_table'",title_lookup:{device:'Device ID',message:'Test Results'}});
+
+   var test_summary = [
+    {
+        "Device": "A001",
+        "tests": [
+            { "test_name": "Power up Test",     "test_result": "\u2714 Passed"}
+        ],
+		"Result":"Passed to Delivery"
+    },
+    {
+        "Device": "A002",
+        "tests": [
+            { "test_name": "Power up Test",     "test_result": "\u2714 Passed"},
+            { "test_name": "Weight Check"},
+            { "test_name": "Amplitude Check",     "test_result": "❌ TOO LOW-REJECTED" }],
+		"Result":"❌ Put in Rubbish Bin"
+    },
+	    {
+        "Device": "A003",
+        "tests": [
+            { "test_name": "Smell Test",     "test_result": "\u2714 Passed"}
+        ],		"Result":"Passed to Delivery"
+
+    }
+];
+
+   DoTest(test_summary,{table_attributes:"id='data_summary_table'","title_lookup":{test_name:"Test",test_result:"Result"}});
+   DoTest(test_summary,{table_attributes:"id='data_summary_table'","title_lookup":{test_name:"Test",test_result:"Result"},merge_up:['tests']});  // Note - only one 'merge_up' per line supported - otherwise it is a bit meaningless when merging different lengths
+
+ var summary_of_spreadsheets = [
+    {
+        "sheet_title": "Project Indigo Manufacturing and FW Test Procedure",
+        "google_url": "https:\/\/docs.google.com\/spreadsheets\/d\/(redacted_id_1)\/",
+        "edit_source_link": "https:\/\/example.com\/checks\/edit\/?group=checks\/Indigo_1",
+        "pages": [
+            {
+                "page_name": "Project Indigo",
+                "message": "\u2714 58 devices found"
+            }
+        ]
+    },
+    {
+        "sheet_title": "Deployed devices",
+        "google_url": "https:\/\/docs.google.com\/spreadsheets\/d\/1Ql_uiJhTBGPoBwWqZOt4Gl_Gj8Tn_ASL09R-71hpSQc\/",
+        "edit_source_link": "https:\/\/updates2.lx-cloud.com\/checks\/edit\/?group=checks\/org_template_Agrioptics",
+        "pages": [
+            {
+                "page_name": "New Deployed Base Stations",
+                "message": "\u2714 46 devices found"
+            },
+            {
+                "page_name": "Unallocated Base Stations",
+                "message": "\u2714 5 devices found"
+            },
+            {
+                "page_name": "Deployed Nodes",
+                "message": "\u2714 149 devices found"
+            },
+            {
+                "page_name": "Other",
+                "message": "\u2714 36 devices found"
+            }
+        ]
+    },
+    {
+        "sheet_title": "Device Histories",
+        "google_url": "https:\/\/docs.google.com\/spreadsheets\/d\(redacted_id_2)\/",
+        "edit_source_link": "https:\/\/example.com\/checks\/edit\/?group=checks\/Histories",
+        "pages": [
+            {
+                "page_name": "Device Histories",
+                "message": "\u2714 35 devices found (With 105 entries total)"
+            }
+        ]
+    }
+];
+
+  
+  DoTest(summary_of_spreadsheets,{title_lookup:{sheet_title:'Sheet','google_url':'Sheet URL','edit_source_link':'Edit Source'},table_attributes:" class='table table-striped' id='data_summary_table'",value_pairs:['page_name:message'],create_urls:[{text:'sheet_title',url:'google_url',combined:'Spreadsheet'},{text:'Edit',url:'edit_source_link',combined:'Source'}]});
+
+  
+  DoTest(summary_of_spreadsheets,{merge_up:['pages'],title_lookup:{sheet_title:'Sheet','google_url':'Sheet URL','edit_source_link':'Edit Source'},table_attributes:"id='data_summary_table'",title_lookup:{page_name:'Page',message:'Summary'},create_urls:[{text:'sheet_title',url:'google_url',combined:'Spreadsheet'},{text:'Edit',url:'edit_source_link',combined:'Source'}]});
+
+ DoTest({fred:"tom",mary:"silver"});
+  DoTest({name:"tom",value:"silver"});
+  DoTest([{name:"Device ID",value:"A001"},{name:"Device Colour",value:"Red"}]);
+  DoTest({name:"tom",value:"silver"});
+ 
+
+</script>
+
+
+</body>
