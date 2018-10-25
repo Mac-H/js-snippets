@@ -1,11 +1,54 @@
 //
 // TableHelper.js
-//
+// 
 // Requires 'he' library
 //
 // Example Usage:
 //
-
+function FormatItem(item)
+{			
+	let value;
+	
+	value = RemovePrefixOrNull(item,'linuxtime_utc:','#');
+	if (value != null)
+	{
+		try
+		{
+			return new Date((value+0)*1000).format('Y-m-d H:i:s'); // If you have an error on this line - you probably haven't imported 'date.format.js'
+		}
+		catch (ee)
+		{
+			//
+			return item;
+		}
+		//html += '['+(typeof item)+']';
+	}
+	else
+	{
+	}
+	return item; // +'['+format+':'+(typeof item)+']';
+}
+function RemovePrefixOrNull(item,prefix_str,format='')
+{
+	item = item.trim()
+	let item_txt = item.toLowerCase();
+	
+	if (!item_txt.startsWith(prefix_str)) return null;
+	
+	item_txt =item_txt.substring(prefix_str.length);
+	if (format == '#')
+	{
+		let value_num = parseInt(item_txt);
+		
+		if (isNaN(value_num))
+			return null;
+		else
+			return value_num;
+	}
+//	console.log("RemovePrefixOrNull(`"+item+"`,'`"+prefix_str+"`)=`"+item_txt+"`");
+		
+	return item_txt;
+}
 	//
 	// Options: 
 	
@@ -13,18 +56,19 @@
 	// options: {ignorePropertyPrefixList:['!','IgnoreThisElement']
 	//           includeBlankEntries:true  // default:false
 	//          }
-	function TableHelper_MakeTable(data=null,options=null)
+	function TableHelper_MakeTable(data=null,options=null,sub_level=0)
 	{
-		let tableHelper = new TableHelper(data,options);
+		let tableHelper = new TableHelper(data,options,sub_level);
 		
 		return tableHelper.GetTableAsHtml();
 	}
-	function TableHelper(data=null,options=null)
+	function TableHelper(data=null,options=null,sub_level=0)
 	{
 		this.titles = [];
 		this.all_rows=[];
 		this.options = options;
 		this.orig_data = data;
+		this.sub_level = sub_level;
 		
 		this.asHtml = function(obj)
 		{
@@ -32,13 +76,13 @@
 			
 			if ((typeof obj == 'array') || Array.isArray(obj))
 			{
-				return TableHelper_MakeTable(obj,this.options);
+				return TableHelper_MakeTable(obj,this.options,this.sub_level+1);
 			}
 
 			if (typeof obj == 'object')
 			{
 				if (typeof obj['html'] == 'string') return obj['html']; // Special case - it means we have already done the hard work
-				return TableHelper_MakeTable(obj,this.options);
+				return TableHelper_MakeTable(obj,this.options,this.sub_level+1);
 			}
 			
 			let txt = ""+obj;
@@ -50,9 +94,9 @@
 			{
 				let html= he.encode(txt);
 			
-			if (!this.GetOptionOrDefault('muffle_newlines',false)) html = html.split("\n").join("<br>");
+				if (!this.GetOptionOrDefault('muffle_newlines',false)) html = html.split("\n").join("<br>");
 
-			return html;
+				return html;
 			}
 		}
 		this.GetOptionOrDefault = function (name,default_value=null)
@@ -94,6 +138,26 @@
 			}
 			return false;
 		}
+		this.FormatForProperty = function (propertyName)
+		{
+			//console.log("Looking for format: Property "+JSON.stringify(propertyName));
+			try
+			{
+				let lookup=this.GetOptionOrDefault('propertyConvertFunctions',null);
+				if (lookup==null) return null;
+				//console.log("!!! Found 'propertyConvertFunctions': "+JSON.stringify(lookup));
+				
+				if (typeof lookup[propertyName] == 'undefined') return null;
+				console.log("!!! Found format: Property "+JSON.stringify(propertyName)+"="+JSON.stringify(lookup[propertyName]));
+				return lookup[propertyName];
+			}
+			catch (ee)
+			{
+				console.log("Exception in FormatForProperty("+JSON.stringify(propertyName)+"):");
+				console.log(ee);
+			}
+			return null;
+		}
 
 		this.ElementIsInMergeUpList = function (txt)
 		{
@@ -127,11 +191,41 @@
 				for(var propt in obj)
 				{
 					if (!this.ElementIsInIgnoreList(propt)) 
-					this.AddObjAsLine({name:propt,value:obj[propt]});
+					{
+						this.AddObjAsLine({name:propt,value:this.GetPropertyWithOptionalFormatting(obj,propt)});
+					}
 				}
 			}
 		}
 		
+		this.GetPropertyWithOptionalFormatting = function(obj,propt_name)
+		{
+			let obj_value=obj[propt_name];
+			let lookup=this.FormatForProperty(propt_name);
+			
+			if (lookup == null) return obj_value;
+			
+			try
+			{
+				if (typeof window[lookup] === 'function')
+				{
+					console.log("TableFormat: Calling formating function "+lookup+"("+JSON.stringify(obj_value)+")");
+					obj_value = window[lookup](obj_value);
+				}
+				else
+				{
+					console.log("!! Unable to format  "+JSON.stringify(obj_value)+" : "+JSON.stringify(lookup)+" is not a function");
+				}
+			
+			
+			}
+			catch (ee)
+			{
+				console.log("!! Exception formatting "+JSON.stringify(obj_value)+" with "+JSON.stringify(lookup));
+				console.log(ee);
+			}
+			return obj_value;
+		}
 		//
 		// eg: "create_urls":[{"text":"sheet_title","url":"google_url","combined":"Spreadsheet"},{"text":"Edit","url":"edit_source_link","combined":"Source"}]}
 		//
@@ -180,14 +274,16 @@
 			{
 				if (!this.ElementIsInIgnoreList(propt))
 				{	
+					let item_entry=this.GetPropertyWithOptionalFormatting(obj,propt);
+					
 					let merge_up = this.ElementIsInMergeUpList(propt);
 					if (merge_up)
 					{
-						let count = obj[propt].length;
-						let index=0;
+						let count = item_entry.length;
+						let index=0; 
 						let sub_entries_arrayed={};
 						let merge_up_done = false;
-						for (const element_to_merge of obj[propt])
+						for (const element_to_merge of item_entry)
 						{
 							let sub_item = this.CombinePropertiesIfRequested(element_to_merge);
 							let used=false;
@@ -225,7 +321,7 @@
 					}
 					else
 					{
-						let html = this.asHtml(obj[propt]).trim();
+						let html = this.asHtml(item_entry).trim();
 						if (html != '')
 						{
 							this.AddElement(propt,html);
@@ -275,14 +371,10 @@
 							
 							if (html != null)
 							{
-								if (rowspan == 1)
-									row_to_add.push(html)
-								else
-									row_to_add.push({html:html,attr:("rowspan="+rowspan)});
+								if (rowspan == 1)	row_to_add.push(html)
+								else				row_to_add.push({html:html,attr:("rowspan="+rowspan)});
 							}
-							
 						}
-
 						let row_class = 'other';
 						if (n == 0)
 							row_class = 'first';
@@ -317,9 +409,27 @@
 				attributes_to_use += ' ';
 			attributes_to_use += extra_attributes;
 			
+			if ((','+this.GetOptionOrDefault('sub_table_format','')+',').includes(',simplify_single_lines,'))
+			{
+				if (this.sub_level > 0)
+				{
+					if (this.all_rows.length < 2)
+					{
+						//attributes_to_use += ' simplify=yes ';
+						let simple= this.GetTableContentsAsHtml(true);
+						simple = simple.split('<tr><td>').join('');
+						simple = simple.split('</td></tr>').join('');
+						simple = simple.split('</td><td>').join('&nbsp;');
+						
+						return simple; // '!'+he.encode(simple)+'!';
+					}
+					/* else { attributes_to_use += ' hide=yes '; } */
+				}
+			}
+			
 			
 			if (attributes_to_use != '') attributes_to_use=' '+attributes_to_use;
-			return '<table'+attributes_to_use+'>'+this.GetTableContentsAsHtml()+'</table>';
+			return '<table'+attributes_to_use+' table_level='+this.sub_level+' >'+this.GetTableContentsAsHtml()+'</table>';
 		}
 		this.GetTableContentsAsHtml = function()
 		{
@@ -328,7 +438,6 @@
 			let html='';
 
 			let is_name_values_pairs = false;
-			
 			if (this.titles.length == 2)
 			{
 				let name_value_pair_list = this.GetOptionOrDefault('value_pairs',[]);
@@ -342,7 +451,7 @@
 			{
 				for(const entry of this.all_rows)
 				{
-					html += '<tr>';
+					//html += '<tr>';
 					
 					let name='';
 					let value='';
@@ -355,7 +464,7 @@
 					
 					
 					if ((value != '') || this.GetOptionOrDefault('include_empty_values'))
-						html += '<tr>'+this.MakeHtmlTableCol(name,'td')+this.MakeHtmlTableCol(value,'td')+"</tr>\n";
+						html += '<tr>'+this.MakeHtmlTableCol(name,'td')+this.MakeHtmlTableCol(value,'td',name)+"</tr>\n";
 				}
 			}
 			else
@@ -363,7 +472,6 @@
 				let title_lookup_to_use = this.GetOptionOrDefault('title_lookup',{});
 				
 				let titles_to_use = [];
-				
 				for (let x of this.titles)
 				{
 					if (typeof title_lookup_to_use[x] == 'undefined')
@@ -372,17 +480,19 @@
 					}
 					else
 					{
-						let title = title_lookup_to_use[x];
-						titles_to_use.push(title);
+						titles_to_use.push(title_lookup_to_use[x]);
 					}
 				}
-				
+
 				html += this.MakeHtmlTableLine(titles_to_use,num_cols,'th');
+				//let colnum=0;
+	//			console.log(this.all_rows);
 				
-				
-							
-				for(const entry of this.all_rows)
+				for(let entry of this.all_rows)
 				{
+					//entry.titles=titles_to_use;
+					//entry.formats=formats_to_use;
+					//console.log(entry);
 					html += this.MakeHtmlTableLine(entry,num_cols,'td');
 				}
 			}
@@ -393,11 +503,10 @@
 		{
 			return this.titles.length;
 		}
-		this.MakeHtmlTableCol = function(item,kind='td')
+		this.MakeHtmlTableCol = function(item,kind='td',prop_kind='')
 		{
 			let html = '';
 			let attr='';
-			
 			if (typeof item == 'object')
 			{
 				if (typeof item['html'] == 'undefined')
@@ -411,8 +520,7 @@
 				
 			}
 			else
-				html = item;
-			
+				html = FormatItem(item);
 			
 			return '<'+kind+attr+'>'+html+"</"+kind+">";
 	
@@ -433,6 +541,8 @@
 			else
 			{
 				html_row = "<tr class='"+_array_or_row_def.row_class+"'>";
+				let col_num=0;
+	//			console.log(_array_or_row_def);
 				for(const entry of _array_or_row_def.row_data)
 				{
 					html_row+=this.MakeHtmlTableCol(entry,kind);

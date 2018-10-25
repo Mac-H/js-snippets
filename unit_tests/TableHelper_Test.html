@@ -33,6 +33,10 @@
     background-color: #4CAF50;
     color: white;
 }
+
+#outer_border_table { border:1px solid black; }
+#top_border_table  { border-top: 1px solid black; }
+
 </style>  </head>
 <body>
 
@@ -41,6 +45,7 @@
 <div id='test_results'><div>
 <script src='https://cdnjs.cloudflare.com/ajax/libs/he/1.1.1/he.js'></script>
 <script src='../libs/TableHelper.js'></script>
+<script src='../libs/date.format.js'></script>
 
 <script>
 
@@ -59,11 +64,16 @@
     let html = '';
 
 	
-	html += "<table>\n";
+	html += "<table id='outer_border_table'>\n";
 	
+	let at_top = true;
 	for (const test_entry of test_results)
 	{
-		html += "<tr><td>----------</td><td>----------------</td><tr>\n";
+		if (!at_top)
+		{
+			html += "<tr id='top_border_table'><td colspan=2 id='top_border_table'></td><tr>\n";
+		}
+		at_top=false;
 		html += "<tr><td>"+test_entry.lhs_html+"</td><td>"+test_entry.rhs_html+"</td></tr>\n";
 	}
 	html += "</table>\n";
@@ -104,12 +114,156 @@
  
  }
  
+ function DoTest_WithMultipleOptions(data,multiple_options)
+ {
+	var html_lhs;
+	
+
+	html_lhs = "TableHelper(data,options):<br>\n&bull; data=<br>\n";
+	html_lhs += '<pre>'+asHtml(JSON.stringify(data,null,4).split("\n").join("<br>"))+'</pre>';
+
+	html_rhs = "";
+	for (let i=0; i < multiple_options.length; i++)
+	{
+		if (i != 0) html_rhs += "<br>----------<br>";
+		let options_msg = "&bull; options = "+asHtml(JSON.stringify(multiple_options[i]))+"<br>";
+		html_rhs += options_msg+TableHelper_MakeTable(data,multiple_options[i]);
+	}
+	
+
+    AddTestResult(html_lhs,html_rhs);
+ 
+ }
+ 
+ function DoTest_WithAddedOptionEachTime(data,base_options,options_to_add_each_time)
+ {
+	var html_lhs;
+	
+	let options = base_options;
+	if (base_options == null) base_options = {};
+	
+	
+	html_lhs = "TableHelper(data,options):<br>\n&bull; data=<br>\n";
+	html_lhs += '<pre>'+asHtml(JSON.stringify(data,null,4).split("\n").join("<br>"))+'</pre>';
+
+	html_rhs = "";
+	html_rhs += "&bull; options = "+asHtml(JSON.stringify(options))+"<br>";
+	html_rhs += TableHelper_MakeTable(data,options);
+
+	let options_txt= JSON.stringify(base_options).slice(1,-1);
+	
+	for (let i=0; i < options_to_add_each_time.length; i++)
+	{
+		html_rhs += "<br>----------<br>";
+		let name = options_to_add_each_time[i].name;
+		let value = options_to_add_each_time[i].value;
+
+		if (options_txt != "")
+			options_txt += ",";
+		
+		html_rhs += "&bull; options = {"+options_txt+" <font color='blue'>"+asHtml(name)+"</font>:<font color='red'>"+asHtml(JSON.stringify(value))+"</font>}<br>";
+
+		options_txt += JSON.stringify(name)+":"+JSON.stringify(value);
+		
+		console.log("Parsing {"+options_txt+"}");
+		//html_rhs += JSON.stringify(JSON.parse("{"+options_txt+"}"))+"<br>";
+		
+		html_rhs += TableHelper_MakeTable(data,JSON.parse("{"+options_txt+"}"));
+	}
+	
+
+    AddTestResult(html_lhs,html_rhs);
+ 
+ }
+ 
  
  //
  // Tests
  //
  
-  var private_test_a = 
+ 
+ var test_d =	
+[
+			{
+				"DeviceName": "A-013",
+				"DeviceManufacturer": "ACME Corp",
+				"Hardware Config":{"Timeout":"3 seconds","DataPort":3},"Radio Settings":{"Kind":"LORA","Frequency_MHz":915},
+				"User Setting":{"Alert Timeout":"3 seconds"},
+			},
+			{
+				"DeviceName": "A-013",
+				"DeviceManufacturer": "Tyrell Corp",
+				"Hardware Config":{"Timeout":"4 seconds","DataPort":3},"Radio Settings":{"Kind":"Wifi","SSID":"NotMyWifi"},
+				"User Setting":{"Alert Timeout":"4 seconds"},
+			},
+
+];
+
+ 	  DoTest_WithAddedOptionEachTime(test_d,
+			{table_attributes:"id='data_summary_table'",
+			ignorePropertyPrefixList:['generator'],
+			title_lookup:{network:'Network',reason:'Notes',when:'When',url:'Ref'},merge_up:['_multiple']},
+			[{name:"sub_table_format",value:"simplify_single_lines",Description:"Simplifying single line objects"}
+			,{name:'propertyConvertFunctions',value:{'DeviceName':'reverse_txt'}} // function (txt) { return '!'+txt+'!';}}}
+			,{name:"ignorePropertyPrefixList",value:["Device"],Description:"Removing Columns"}]);
+//                                         ,propertyConvertFunctions:{'source_guid':Lookup_Spreadsheets_GetConfiguratorToolCaption}
+			
+			
+
+
+ var test_c =	
+[
+	{
+		"reason": "Observed (With Firmware 2.1)",
+		"_multiple": [
+			{
+				"when": "LinuxTime_utc:1510262374",
+				"url": {
+					"html": "<a target='_blank' href='https:\/\/example.com.com\/?uid=12'>Link<\/a>"
+				}
+			}
+		]
+	},
+	{
+		"reason": "Observed (With Firmware 2.2)",
+		"_multiple": [
+			{
+				"when": "LinuxTime_utc:1510257949",
+				"url": {
+					"html": "<a target='_blank' href='https:\/\/example.com?uid=54'>Link<\/a>"
+				}
+			},
+			{
+				"when": "LinuxTime_utc:1508811118",
+				"url": {
+					"html": "<a target='_blank' href='https:\/\/example.com?uid=53'>Link<\/a>"
+				}
+			}
+		]
+	}
+
+];
+
+ 	  DoTest(test_c,
+			{table_attributes:"id='data_summary_table'",
+			ignorePropertyPrefixList:['generator'],
+			title_lookup:{network:'Network',reason:'Notes',when:'When',url:'Ref'},merge_up:['_multiple']});
+
+
+			
+ 
+ var test_b = [{"Network":"Montego",
+					   "reason":"Observed (With Firmware 1.1.2.0)"
+						,"_multiple":[{"when":"2017-09-05 01:56 GMT","url":{"html":"<a target='_blank' href='https://example.com/?ref=1'>Link</a>"}}
+						             ,{"when":"2017-08-29 00:25 GMT","url":{"html":"<a target='_blank' href='https://example.com/?ref=2'>Link</a>"}}]}];
+ 
+ 	  DoTest(test_b,
+			{table_attributes:"id='data_summary_table'",
+			ignorePropertyPrefixList:['generator'],
+			title_lookup:{network:'Network',reason:'Notes',when:'When',url:'Ref'},merge_up:['_multiple']});
+
+ 
+  var test_a = 
   
   [
         {
@@ -219,7 +373,7 @@
         }
 	];
 	
-	  DoTest(private_test_a,
+	  DoTest(test_a,
 			{table_attributes:"id='data_summary_table'",
 			ignorePropertyPrefixList:['generator'],
 			title_lookup:{network:'Network',reason:'Notes',when:'When',url:'Ref'},merge_up:['_multiple']});
@@ -227,9 +381,13 @@
 	  
  
    DoTest([{name:"Device ID",value:"A001"},{name:"Device Colour",value:"Red"}]);
-   DoTest([{device:"A001",message :"\u2714 9 tests passed"},{device:"A002",message :"\u2714 12 tests passed"}]);
-   DoTest([{device:"A001",message :"\u2714 9 tests passed"},{device:"A002",message :"\u2714 12 tests passed"}],{title_lookup:{device:'Device ID',message:'Test Results'}});
-   DoTest([{device:"A001",message :"\u2714 9 tests passed"},{device:"A002",message :"\u2714 12 tests passed"}],{table_attributes:"id='data_summary_table'",title_lookup:{device:'Device ID',message:'Test Results'}});
+   DoTest_WithAddedOptionEachTime([{device:"A001",message :"\u2714 9 tests passed"},{device:"A002",message :"\u2714 12 tests passed"}],
+	  {}
+    , [ {name:'title_lookup',value:{device:'Device ID',message:'Test Results'}}
+	   ,{name:'table_attributes',value:"id='data_summary_table'"}
+	   ,{name:'propertyConvertFunctions',value:{'device':'fred'}} // function (txt) { return '!'+txt+'!';}}}
+	  ]);
+	  
 
    var test_summary = [
     {
@@ -256,8 +414,11 @@
     }
 ];
 
-   DoTest(test_summary,{table_attributes:"id='data_summary_table'","title_lookup":{test_name:"Test",test_result:"Result"}});
-   DoTest(test_summary,{table_attributes:"id='data_summary_table'","title_lookup":{test_name:"Test",test_result:"Result"},merge_up:['tests']});  // Note - only one 'merge_up' per line supported - otherwise it is a bit meaningless when merging different lengths
+   DoTest_WithAddedOptionEachTime(test_summary,
+		{table_attributes:"id='data_summary_table'","title_lookup":{test_name:"Test",test_result:"Result"}}
+		,[{'name':'merge_up','value':['tests']} // Note - only one 'merge_up' per line supported - otherwise it is a bit meaningless when merging different lengths
+	  
+	  ]);
 
  var summary_of_spreadsheets = [
     {
@@ -307,18 +468,24 @@
     }
 ];
 
-  
-  DoTest(summary_of_spreadsheets,{title_lookup:{sheet_title:'Sheet','google_url':'Sheet URL','edit_source_link':'Edit Source'},table_attributes:" class='table table-striped' id='data_summary_table'",value_pairs:['page_name:message'],create_urls:[{text:'sheet_title',url:'google_url',combined:'Spreadsheet'},{text:'Edit',url:'edit_source_link',combined:'Source'}]});
-
-  
-  DoTest(summary_of_spreadsheets,{merge_up:['pages'],title_lookup:{sheet_title:'Sheet','google_url':'Sheet URL','edit_source_link':'Edit Source'},table_attributes:"id='data_summary_table'",title_lookup:{page_name:'Page',message:'Summary'},create_urls:[{text:'sheet_title',url:'google_url',combined:'Spreadsheet'},{text:'Edit',url:'edit_source_link',combined:'Source'}]});
+   DoTest_WithAddedOptionEachTime(summary_of_spreadsheets,
+      	{title_lookup:{sheet_title:'Sheet','google_url':'Sheet URL','edit_source_link':'Edit Source','pages':'Pages',page_name:'Page',message:'Summary'}
+		,table_attributes:"id='data_summary_table'",value_pairs:['page_name:message']                ,
+		 create_urls:[{text:'sheet_title',url:'google_url',combined:'Spreadsheet'},{text:'Edit',url:'edit_source_link',combined:'Source'}]}
+	  , [{name:'merge_up',value:['pages']}]);
 
  DoTest({fred:"tom",mary:"silver"});
-  DoTest({name:"tom",value:"silver"});
   DoTest([{name:"Device ID",value:"A001"},{name:"Device Colour",value:"Red"}]);
-  DoTest({name:"tom",value:"silver"});
  
 
+ 
+ function reverse_txt(str)
+ {
+    if (str == null) str = "null";
+	if (typeof str == "string") str = JSON.stringify(str);
+	
+	return str.split('').reverse().join('');
+ }
 </script>
 
 
