@@ -52,6 +52,22 @@ function RemovePrefixOrNull(item,prefix_str,format='')
 	//
 	// Options: 
 	
+	
+	function TableHelper_AsArray(data_obj,name_caption,value_caption)
+	{
+		let array_out = [];
+		
+		for(const key in data_obj)
+		{
+			let value = data_obj[key];
+			let new_obj = {};
+			new_obj[name_caption]=key;
+			new_obj[value_caption]=value;
+			
+			array_out.push(new_obj);
+		}
+		return array_out;
+	}
 	//
 	// options: {ignorePropertyPrefixList:['!','IgnoreThisElement']
 	//           includeBlankEntries:true  // default:false
@@ -73,6 +89,11 @@ function RemovePrefixOrNull(item,prefix_str,format='')
 		this.asHtml = function(obj)
 		{
 			if (obj == null) return "";
+			
+			if ((typeof obj == 'object') && (this.GetOptionOrDefault('as_array','')!=''))
+			{
+				obj = TableHelper_AsArray(obj, this.GetOptionOrDefault('as_array',''),'value');
+			}
 			
 			if ((typeof obj == 'array') || Array.isArray(obj))
 			{
@@ -276,13 +297,18 @@ function RemovePrefixOrNull(item,prefix_str,format='')
 				{	
 					let item_entry=this.GetPropertyWithOptionalFormatting(obj,propt);
 					
-					let merge_up = this.ElementIsInMergeUpList(propt);
+					let merge_up = this.ElementIsInMergeUpList(propt) ;
 					if (merge_up)
 					{
+						if (!Array.isArray(item_entry))
+							item_entry = [item_entry];
+						
 						let count = item_entry.length;
 						let index=0; 
 						let sub_entries_arrayed={};
 						let merge_up_done = false;
+						
+						console.log("AddObjAsLine():"+JSON.stringify(item_entry));
 						for (const element_to_merge of item_entry)
 						{
 							let sub_item = this.CombinePropertiesIfRequested(element_to_merge);

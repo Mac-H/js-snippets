@@ -89,8 +89,8 @@
   }
  
  
-  
- function DoTest(data,options=null)
+ 
+  function DoTest_TransformedInput(data_orig,data_transformed,transform_function_call,options=null)
  {
 	var html_lhs;
 	var options_msg = "";
@@ -99,20 +99,26 @@
 	{
 	options_msg = "&bull; options = "+asHtml(JSON.stringify(options))+"<br>";
 	
-	html_lhs = "TableHelper(data,options):<br>\n&bull; data=<br>\n";
+	html_lhs = "TableHelper("+transform_function_call+",options):<br>\n&bull; data=<br>\n";
     }
 	else
 	{
-	html_lhs = "TableHelper(data):<br>\n";
+	html_lhs = "TableHelper("+transform_function_call+"):<br>\n";
    }
-	html_lhs += '<pre>'+asHtml(JSON.stringify(data,null,4).split("\n").join("<br>"))+'</pre>';
+	html_lhs += '<pre>'+asHtml(JSON.stringify(data_orig,null,4).split("\n").join("<br>"))+'</pre>';
 
-	html_rhs = options_msg+TableHelper_MakeTable(data,options);
+	html_rhs = options_msg+TableHelper_MakeTable(data_transformed,options);
 	
 
     AddTestResult(html_lhs,html_rhs);
  
  }
+  
+ function DoTest(data,options=null)
+ {
+	return DoTest_TransformedInput(data,data,'data',options);
+ }
+ 
  
  function DoTest_WithMultipleOptions(data,multiple_options)
  {
@@ -134,21 +140,24 @@
     AddTestResult(html_lhs,html_rhs);
  
  }
- 
- function DoTest_WithAddedOptionEachTime(data,base_options,options_to_add_each_time)
+  function DoTest_Transformed_WithAddedOptionEachTime(data_orig,data_transformed,data_tranformation_as_text,base_options,options_to_add_each_time)
  {
 	var html_lhs;
 	
-	let options = base_options;
 	if (base_options == null) base_options = {};
+	if ((typeof options_to_add_each_time  == 'undefined')|| (options_to_add_each_time==null))
+		options_to_add_each_time = [];
+
+
+	let options = base_options;
 	
-	
-	html_lhs = "TableHelper(data,options):<br>\n&bull; data=<br>\n";
-	html_lhs += '<pre>'+asHtml(JSON.stringify(data,null,4).split("\n").join("<br>"))+'</pre>';
+
+	html_lhs = "TableHelper("+data_tranformation_as_text+",options):<br>\n&bull; data=<br>\n";
+	html_lhs += '<pre>'+asHtml(JSON.stringify(data_orig,null,4).split("\n").join("<br>"))+'</pre>';
 
 	html_rhs = "";
 	html_rhs += "&bull; options = "+asHtml(JSON.stringify(options))+"<br>";
-	html_rhs += TableHelper_MakeTable(data,options);
+	html_rhs += TableHelper_MakeTable(data_transformed,options);
 
 	let options_txt= JSON.stringify(base_options).slice(1,-1);
 	
@@ -168,7 +177,7 @@
 		console.log("Parsing {"+options_txt+"}");
 		//html_rhs += JSON.stringify(JSON.parse("{"+options_txt+"}"))+"<br>";
 		
-		html_rhs += TableHelper_MakeTable(data,JSON.parse("{"+options_txt+"}"));
+		html_rhs += TableHelper_MakeTable(data_transformed,JSON.parse("{"+options_txt+"}"));
 	}
 	
 
@@ -176,12 +185,38 @@
  
  }
  
+ function DoTest_WithAddedOptionEachTime(data,base_options,options_to_add_each_time)
+ {
+	
+	return DoTest_Transformed_WithAddedOptionEachTime(data,data,'data',base_options,options_to_add_each_time);
+ 
+ }
+ 
  
  //
  // Tests
  //
+ var test_e = {"eventId":{"foundCount":1000,"kind":"string","values":"1000 different values, including \"0000000001ac14bb\" & \"0000000001ad78c8\""},
+               "$received":{"foundCount":1000,"kind":"string","values":"998 different values, including \"2019-03-13T20:39:02.3112556+00:00\" & \"2019-03-15T00:21:56.3820478+00:00\""},
+			   "$deviceId":{"foundCount":1000,"kind":"string","values":"4 different values, including \"B0211806CBBD820E\" & \"B0211806467FA617\""},
+			   "broadcast":{"foundCount":1000,"kind":"object"},
+			   "broadcast.sensorBlock":{"foundCount":998,"kind":"object"},
+			   "broadcast.sensorBlock.sensorUID":{"foundCount":998,"kind":"double","values":"1.1534588364117e+19 to 1.1534588367977e+19"},
+			   "broadcast.sensorBlock.sensorUIDHex":{"foundCount":998,"kind":"string","values":"26 different values, including \"a0131701a8104da3\" & \"a013170158e4bb90\""}
+			   }; 
  
- 
+/*			 
+   DoTest_WithAddedOptionEachTime(test_e,
+			{table_attributes:"id='data_summary_table'"},
+			[{name:"sub_table_format",value:"simplify_single_lines",Description:"Simplifying single line objects"}]);
+*/
+   DoTest_Transformed_WithAddedOptionEachTime(
+      test_e,TableHelper_AsArray(test_e,'Data','Info'),'TableHelper_AsArray(data,"Data","Info")'
+	,{table_attributes:"id='data_summary_table'"}
+	,[{name:'merge_up',value:['Info'],Description:"Merging up"}]
+	);
+
+
  var test_d =	
 [
 			{
